@@ -23,9 +23,19 @@ foreach (string clipFile in Directory.EnumerateFiles(".\\Clips"))
     foreach(Package pkg in policies.packages)
     {
         string url = $"https://displaycatalog.mp.microsoft.com/v7.0/products?bigIds={pkg.productId}&market=US&languages=en-US,neutral&MS-CV=DGU1mcuYo0WMMp+F.1";
-        string gameName = await GetGameNameAsync(url);
-        Console.WriteLine(clipFile + " is for product: " + gameName + " ContentID: " + pkg.packageIdentifier);
-    
+        string gameName = "Unknown Title";
+        try
+        {
+            gameName = await GetGameNameAsync(url);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"!WARNING! Error while retrieving product name: {ex.Message}");
+        }
+        Console.WriteLine($"{clipFile} is for product: {gameName} ContentID: {pkg.packageIdentifier}");
+
+
+
     }
     f.Close();
 }
@@ -42,8 +52,15 @@ static async Task<string> GetGameNameAsync(string url)
             JObject json = JObject.Parse(jsonResponse);
 
             // Navigate the JSON structure to get the game name
-            var productTitle = json["Products"]?[0]?["LocalizedProperties"]?[0]?["ProductTitle"]?.ToString();
-
+            var productTitle = "Unknown Title";
+            try
+            {
+                productTitle = json["Products"]?[0]?["LocalizedProperties"]?[0]?["ProductTitle"]?.ToString();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"!WARNING! Error while retrieving product name: {ex.Message}");
+            }
             return productTitle ?? "Unknown Title";
         }
         else
